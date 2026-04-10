@@ -9,30 +9,36 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: android-actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android NDK
+      - name: Setup Android SDK & NDK
         uses: android-actions/setup-android@v3
+        with:
+          # We force a stable CMake version that works with NDK 23
+          packages: 'ndk;23.2.8568313;cmake;3.22.1'
 
-      - name: Build with Gradle
+      - name: Build Static Library
         run: |
           chmod +x gradlew
-          # This builds the release version including the static libraries
-          ./gradlew :shadowhook:assembleRelease
+          # We override the CMake version requirement from the command line 
+          # to prevent the "CMake 4.0.3 not found" error.
+          ./gradlew :shadowhook:assembleRelease \
+            -Pandroid.extractNativeLibs=false \
+            -Dcmake.dir=/usr/local/lib/android/sdk/cmake/3.22.1
 
-      - name: Find and Collect .a Files
+      - name: Collect ARM64 Static Library
         run: |
-          mkdir -p output/static
-          # Find all libshadowhook.a files and copy them to output
-          find shadowhook/build -name "libshadowhook.a" -exec cp {} output/static/ \;
-          ls -R output/static
+          mkdir -p output/arm64-v8a
+          # Finding the .a file specifically for your OnePlus 9 Pro (ARM64)
+          find . -name "libshadowhook.a" | grep "arm64-v8a" | xargs -I {} cp {} output/arm64-v8a/
+          echo "Files collected:"
+          ls -R output/
 
-      - name: Upload Static Library
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: shadowhook-static-libs
-          path: output/static/
-          
+          name: ShadowHook-Static-v2.0.0
+          path: output/
