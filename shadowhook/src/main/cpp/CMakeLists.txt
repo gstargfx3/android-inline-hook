@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30.5)
+cmake_minimum_required(VERSION 3.22.1) 
 project(shadowhook)
 enable_language(ASM)
 
@@ -12,7 +12,7 @@ endif()
 
 set(TARGET "shadowhook")
 file(GLOB SRC *.c arch/${ARCH}/*.c arch/${ARCH}/*.S common/*.c third_party/*/*.c)
-add_library(${TARGET} SHARED ${SRC})
+add_library(${TARGET} STATIC ${SRC}) 
 target_compile_features(${TARGET} PRIVATE c_std_11)
 target_compile_options(${TARGET} PRIVATE -Weverything -Werror)
 target_include_directories(${TARGET} PRIVATE . include arch/${ARCH} common third_party/xdl third_party/bsd third_party/lss)
